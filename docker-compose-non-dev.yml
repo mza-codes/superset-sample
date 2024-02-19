@@ -21,7 +21,7 @@ x-superset-depends-on: &superset-depends-on
 x-superset-volumes:
   &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
   - ./docker:/app/docker
-  - superset_home:/app/superset_home
+  - ./production_disk/superset_home:/app/superset_home
 
 version: "3.7"
 services:
@@ -30,7 +30,7 @@ services:
     container_name: superset_cache
     restart: unless-stopped
     volumes:
-      - redis:/data
+      - ./production_disk/redis:/data
 
   db:
     env_file: docker/.env-non-dev
@@ -38,7 +38,7 @@ services:
     container_name: superset_db
     restart: unless-stopped
     volumes:
-      - db_home:/var/lib/postgresql/data
+      - ./production_disk/db_home:/var/lib/postgresql/data
       - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
   superset:
@@ -92,10 +92,20 @@ services:
     healthcheck:
       disable: true
 
-volumes:
-  superset_home:
-    external: false
-  db_home:
-    external: false
-  redis:
-    external: false
+# volumes:
+#   superset_home:
+#     external: false
+#   db_home:
+#     external: false
+#   redis:
+#     external: false
+
+networks:
+  data_net:
+    name : superset_network_prod
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.12.12.0/24
+          gateway: 172.12.12.1
+
